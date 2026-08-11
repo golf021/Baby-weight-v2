@@ -213,6 +213,7 @@ table button{padding:6px 10px;font-size:13px}
 <select id="childMinute" style="flex:1"></select>
 </div>
 </div>
+<div><label for="childBirthWeight">น้ำหนักแรกเกิด (กก.)</label><input id="childBirthWeight" type="number" step="0.01" min="0" placeholder="00.00"></div>
 </div>
 <div class="actions">
 <button class="primary" onclick="saveChildProfile()">บันทึกข้อมูลลูก</button>
@@ -358,6 +359,7 @@ function loadChildProfileForm(){
   const [h,m]=(c.birthTime||"").split(":");
   document.getElementById("childHour").value=h||"";
   document.getElementById("childMinute").value=m||"";
+  document.getElementById("childBirthWeight").value=(c.birthWeight!=null&&c.birthWeight!=="")?c.birthWeight:"";
   document.getElementById("childLabel").textContent=c.name||"ลูก";
 }
 function saveChildProfile(){
@@ -366,21 +368,35 @@ function saveChildProfile(){
   appData.child.sex=document.getElementById("childSex").value;
   const h=document.getElementById("childHour").value,m=document.getElementById("childMinute").value;
   appData.child.birthTime=(h&&m)?`${h}:${m}`:"";
+  const bw=parseFloat(document.getElementById("childBirthWeight").value);
+  appData.child.birthWeight=isFinite(bw)?bw:"";
   saveApp();loadChildProfileForm();render();
   alert("บันทึกข้อมูลลูกแล้ว");
+}
+const THAI_DAYS=["อาทิตย์","จันทร์","อังคาร","พุธ","พฤหัส","ศุกร์","เสาร์"];
+function formatDateWithDay(dateStr){
+  const d=new Date(dateStr+"T00:00:00");
+  const dayName=THAI_DAYS[d.getDay()];
+  const dayNum=d.getDate();
+  const month=d.toLocaleDateString("th-TH",{month:"short"});
+  const year=d.toLocaleDateString("th-TH",{year:"numeric"});
+  return `วัน${dayName}ที่ ${dayNum} ${month} ${year}`;
 }
 function renderHeroMeta(){
   const c=appData.child;
   const box=document.getElementById("heroMeta");
-  if(!c||(!c.dob&&!c.birthTime)){box.innerHTML="";return}
+  if(!c||(!c.dob&&!c.birthTime&&!c.birthWeight)){box.innerHTML="";return}
   let chips="";
   if(c.dob){
-    chips+=`<div class="hero-chip"><span>วันเกิด</span><b>${formatDate(c.dob)}</b></div>`;
+    chips+=`<div class="hero-chip"><span>วันเกิด</span><b>${formatDateWithDay(c.dob)}</b></div>`;
     chips+=`<div class="hero-chip"><span>ปีนักษัตร</span><b>${nakshatraYear(c.dob)}</b></div>`;
     chips+=`<div class="hero-chip"><span>ราศี</span><b>${thaiZodiacSign(c.dob)}</b></div>`;
   }
   if(c.birthTime){
     chips+=`<div class="hero-chip"><span>เวลาเกิด</span><b>${c.birthTime} น.</b></div>`;
+  }
+  if(c.birthWeight!=null&&c.birthWeight!==""){
+    chips+=`<div class="hero-chip"><span>น้ำหนักแรกเกิด</span><b>${fmtWeight(+c.birthWeight)}</b></div>`;
   }
   box.innerHTML=chips;
 }

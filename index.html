@@ -52,6 +52,12 @@ h1,h2,.stat b,.hero-badge-value,button,summary{font-family:'Kanit',system-ui,san
 .hero-badge-value{font-size:20px;font-weight:600}
 .hero-age{font-size:11px;color:rgba(255,255,255,.7);margin-top:3px;font-family:'IBM Plex Sans Thai',sans-serif}
 
+.hero-meta{position:relative;display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.hero-chip{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:12px;
+  padding:8px 14px;backdrop-filter:blur(6px);font-family:'IBM Plex Sans Thai',sans-serif}
+.hero-chip span{display:block;font-size:11px;color:rgba(255,255,255,.65)}
+.hero-chip b{display:block;font-size:14px;font-weight:600;color:#fff;font-family:'Kanit',sans-serif;margin-top:2px}
+
 .card{background:var(--surface);border-radius:20px;padding:20px;margin-bottom:16px;box-shadow:var(--shadow);border:1px solid var(--line)}
 .card h2{font-size:17px;margin:0 0 16px;font-weight:600;display:flex;align-items:center;gap:8px}
 details.card{padding:20px}
@@ -127,14 +133,32 @@ table button{padding:6px 10px;font-size:13px}
   .card{padding:16px}details.card{padding:16px}.hero{padding:22px 18px}}
 
 @media print{
+  @page{size:A4 portrait;margin:12mm 10mm}
   .no-print{display:none !important}
-  body{background:#fff}
-  .hero{background:#fff;color:#000;border:1px solid #ddd;box-shadow:none}
+  html,body{background:#fff;font-size:12px}
+  .container{max-width:100%;padding:0;margin:0}
+  .hero{background:#fff;color:#000;border:1px solid #ddd;box-shadow:none;padding:14px 16px;border-radius:10px}
   .hero-blob{display:none}
-  .hero-badge{background:#f5f5f5;border-color:#ddd;color:#000}
+  .hero-badge{background:#f7f7f7;border-color:#ddd;color:#000}
+  .hero-chip{background:#f7f7f7;border-color:#ddd;color:#000}
+  .hero-chip span{color:#555}
   .hero .sub,.hero-age{color:#555}
-  .card{box-shadow:none;border:1px solid #ddd;break-inside:avoid}
+  .card{box-shadow:none;border:1px solid #ddd;break-inside:avoid;page-break-inside:avoid;padding:14px;margin-bottom:10px;border-radius:10px}
+  details.card{padding:14px}
+  .grid{grid-template-columns:repeat(3,1fr) !important;gap:8px}
+  .stats{grid-template-columns:repeat(5,1fr) !important;gap:8px}
+  .stat{padding:8px;border:1px solid #eee}
+  .stat-icon{width:22px;height:22px;font-size:12px;margin-bottom:5px}
+  .stat b{font-size:15px}
+  .stat span{font-size:10.5px}
+  .card h2{font-size:14px;margin-bottom:10px}
+  .chartbox{height:200px}
+  .tablewrap{overflow:visible}
+  table{min-width:0 !important;width:100%;font-size:10.5px}
+  th,td{padding:5px 6px}
+  .who-badge{font-size:11px;padding:8px 10px}
 }
+
 </style>
 </head>
 <body>
@@ -155,6 +179,7 @@ table button{padding:6px 10px;font-size:13px}
       <div class="hero-age" id="heroAge"></div>
     </div>
   </div>
+  <div class="hero-meta" id="heroMeta"></div>
 </header>
 
 <details class="card no-print" id="profileDetails">
@@ -164,11 +189,18 @@ table button{padding:6px 10px;font-size:13px}
 <div><label for="childName">ชื่อเล่น</label><input id="childName" type="text" placeholder="เช่น น้องพีช"></div>
 <div><label for="childSex">เพศ</label><select id="childSex"><option value="">ไม่ระบุ</option><option value="M">ชาย</option><option value="F">หญิง</option></select></div>
 <div><label for="childDob">วันเกิด</label><input id="childDob" type="date"></div>
+<div><label for="childHour">เวลาเกิด (24 ชม.)</label>
+<div style="display:flex;gap:8px;align-items:center">
+<select id="childHour" style="flex:1"></select>
+<span style="color:var(--ink-soft);font-weight:600">:</span>
+<select id="childMinute" style="flex:1"></select>
+</div>
+</div>
 </div>
 <div class="actions">
 <button class="primary" onclick="saveChildProfile()">บันทึกข้อมูลลูก</button>
 </div>
-<div class="small" style="margin-top:10px">ใส่วันเกิดและเพศ เพื่อแสดงอายุของลูกและเทียบน้ำหนักกับเกณฑ์ WHO โดยประมาณ</div>
+<div class="small" style="margin-top:10px">ใส่วันเกิดและเพศ เพื่อแสดงอายุของลูกและเทียบน้ำหนักกับเกณฑ์ WHO โดยประมาณ ใส่เวลาเกิดเพื่อบันทึกไว้ในการ์ดด้านบน</div>
 </div>
 </details>
 
@@ -244,6 +276,31 @@ const WHO_WFA={
      [21,8.6,10.9,13.8],[24,9.0,11.5,14.5]]
 };
 
+/* ---------- Thai nakshatra (12-year animal cycle) & zodiac sign ---------- */
+const THAI_NAKSHATRA=["ชวด (หนู)","ฉลู (วัว)","ขาล (เสือ)","เถาะ (กระต่าย)","มะโรง (งูใหญ่)","มะเส็ง (งูเล็ก)",
+  "มะเมีย (ม้า)","มะแม (แพะ)","วอก (ลิง)","ระกา (ไก่)","จอ (หมา)","กุน (หมู)"];
+function nakshatraYear(dob){
+  const d=new Date(dob+"T00:00:00");
+  const y=d.getFullYear();
+  const songkran=new Date(y+"-04-13T00:00:00");
+  const ny=d<songkran?y-1:y; // ปีนักษัตรไทยเปลี่ยนช่วงสงกรานต์
+  const idx=(((ny-2020)%12)+12)%12; // 2020 = ปีชวด
+  return THAI_NAKSHATRA[idx];
+}
+const ZODIAC_RANGES=[
+  [1,20,2,18,"ราศีกุมภ์"],[2,19,3,20,"ราศีมีน"],[3,21,4,19,"ราศีเมษ"],[4,20,5,20,"ราศีพฤษภ"],
+  [5,21,6,20,"ราศีเมถุน"],[6,21,7,22,"ราศีกรกฎ"],[7,23,8,22,"ราศีสิงห์"],[8,23,9,22,"ราศีกันย์"],
+  [9,23,10,22,"ราศีตุลย์"],[10,23,11,21,"ราศีพิจิก"],[11,22,12,21,"ราศีธนู"]
+];
+function thaiZodiacSign(dob){
+  const d=new Date(dob+"T00:00:00");
+  const m=d.getMonth()+1,day=d.getDate();
+  for(const [m1,d1,m2,d2,name] of ZODIAC_RANGES){
+    if((m===m1&&day>=d1)||(m===m2&&day<=d2))return name;
+  }
+  return "ราศีมังกร"; // 22 ธ.ค. - 19 ม.ค.
+}
+
 /* ---------- App data (single child) ---------- */
 function loadApp(){
   const raw=localStorage.getItem("babyWeightApp");
@@ -253,13 +310,13 @@ function loadApp(){
     if(Array.isArray(d.children)){                              // migrate from old multi-child format
       const c=d.children[0]||{name:"ลูก",dob:"",sex:""};
       const ents=(d.entries&&d.entries[c.id])||[];
-      const app={child:{name:c.name||"ลูก",dob:c.dob||"",sex:c.sex||""},entries:ents};
+      const app={child:{name:c.name||"ลูก",dob:c.dob||"",sex:c.sex||"",birthTime:""},entries:ents};
       localStorage.setItem("babyWeightApp",JSON.stringify(app));
       return app;
     }
   }
   const old=JSON.parse(localStorage.getItem("babyWeightEntries")||"[]");   // very old flat format
-  const app={child:{name:"ลูก",dob:"",sex:""},entries:old};
+  const app={child:{name:"ลูก",dob:"",sex:"",birthTime:""},entries:old};
   localStorage.setItem("babyWeightApp",JSON.stringify(app));
   return app;
 }
@@ -271,19 +328,44 @@ let entries=appData.entries;
 let period="week", chart=null, editId=null, lastSnapshot=null, toastTimer=null;
 
 /* ---------- Child profile ---------- */
+function populateTimeSelects(){
+  const h=document.getElementById("childHour"),m=document.getElementById("childMinute");
+  h.innerHTML='<option value="">ชม.</option>'+Array.from({length:24},(_,i)=>{const v=String(i).padStart(2,"0");return `<option value="${v}">${v}</option>`}).join("");
+  m.innerHTML='<option value="">นาที</option>'+Array.from({length:60},(_,i)=>{const v=String(i).padStart(2,"0");return `<option value="${v}">${v}</option>`}).join("");
+}
 function loadChildProfileForm(){
   const c=appData.child;
   document.getElementById("childName").value=c.name||"";
   document.getElementById("childDob").value=c.dob||"";
   document.getElementById("childSex").value=c.sex||"";
+  const [h,m]=(c.birthTime||"").split(":");
+  document.getElementById("childHour").value=h||"";
+  document.getElementById("childMinute").value=m||"";
   document.getElementById("childLabel").textContent=c.name||"ลูก";
 }
 function saveChildProfile(){
   appData.child.name=document.getElementById("childName").value.trim()||"ลูก";
   appData.child.dob=document.getElementById("childDob").value;
   appData.child.sex=document.getElementById("childSex").value;
+  const h=document.getElementById("childHour").value,m=document.getElementById("childMinute").value;
+  appData.child.birthTime=(h&&m)?`${h}:${m}`:"";
   saveApp();loadChildProfileForm();render();
   alert("บันทึกข้อมูลลูกแล้ว");
+}
+function renderHeroMeta(){
+  const c=appData.child;
+  const box=document.getElementById("heroMeta");
+  if(!c||(!c.dob&&!c.birthTime)){box.innerHTML="";return}
+  let chips="";
+  if(c.dob){
+    chips+=`<div class="hero-chip"><span>วันเกิด</span><b>${formatDate(c.dob)}</b></div>`;
+    chips+=`<div class="hero-chip"><span>ปีนักษัตร</span><b>${nakshatraYear(c.dob)}</b></div>`;
+    chips+=`<div class="hero-chip"><span>ราศี</span><b>${thaiZodiacSign(c.dob)}</b></div>`;
+  }
+  if(c.birthTime){
+    chips+=`<div class="hero-chip"><span>เวลาเกิด</span><b>${c.birthTime} น.</b></div>`;
+  }
+  box.innerHTML=chips;
 }
 
 /* ---------- Helpers ---------- */
@@ -422,6 +504,7 @@ function render(){
     document.getElementById("heroAge").textContent="";
   }
   renderWhoBox();
+  renderHeroMeta();
   drawChart();
 }
 function renderWhoBox(){
@@ -506,7 +589,7 @@ function drawChart(){
     borderColor:"#1FBFA3",backgroundColor:gradient,borderWidth:3,
     pointBackgroundColor:"#1FBFA3",pointBorderColor:"#fff",pointBorderWidth:2,
     pointRadius:4,pointHoverRadius:6
-  }]},options:{responsive:true,maintainAspectRatio:false,
+  }]},options:{responsive:true,maintainAspectRatio:false,devicePixelRatio:3,
     plugins:{legend:{display:false}},
     scales:{
       y:{title:{display:true,text:"กิโลกรัม"},grid:{color:"#EAE7F7"},ticks:{color:"#767B9E"}},
@@ -531,10 +614,10 @@ function importData(ev){
         entries.sort((a,b)=>a.date.localeCompare(b.date));
         persistEntries();
       }else if(d&&d.child&&Array.isArray(d.entries)){
-        appData=d;saveApp();entries=appData.entries;loadChildProfileForm();
+        appData=d;if(!appData.child.birthTime)appData.child.birthTime="";saveApp();entries=appData.entries;loadChildProfileForm();
       }else if(d&&Array.isArray(d.children)){
         const c=d.children[0]||{name:"ลูก",dob:"",sex:""};
-        appData={child:{name:c.name||"ลูก",dob:c.dob||"",sex:c.sex||""},entries:(d.entries&&d.entries[c.id])||[]};
+        appData={child:{name:c.name||"ลูก",dob:c.dob||"",sex:c.sex||"",birthTime:c.birthTime||""},entries:(d.entries&&d.entries[c.id])||[]};
         saveApp();entries=appData.entries;loadChildProfileForm();
       }else throw Error();
       render();
@@ -544,7 +627,12 @@ function importData(ev){
   r.readAsText(file);ev.target.value="";
 }
 
+/* ---------- Print ---------- */
+window.addEventListener("beforeprint",()=>{if(chart)chart.resize()});
+window.addEventListener("afterprint",()=>{if(chart)chart.resize()});
+
 /* ---------- Init ---------- */
+populateTimeSelects();
 loadChildProfileForm();
 render();
 if(!appData.child.dob&&entries.length===0){document.getElementById("profileDetails").open=true}

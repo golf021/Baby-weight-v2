@@ -41,10 +41,16 @@ h1,h2,.stat b,.hero-badge-value,button,summary{font-family:'Kanit',system-ui,san
 .hero-blob.b1{width:260px;height:260px;background:var(--coral);top:-90px;right:-60px}
 .hero-blob.b2{width:220px;height:220px;background:var(--mint);bottom:-110px;left:-50px}
 .hero-content{position:relative;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
-.hero-icon{width:56px;height:56px;border-radius:18px;background:rgba(255,255,255,.15);display:flex;align-items:center;
-  justify-content:center;font-size:28px;backdrop-filter:blur(6px);flex-shrink:0}
+.hero-icon-wrap{position:relative;flex-shrink:0}
+.hero-icon{width:88px;height:88px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;
+  justify-content:center;font-size:38px;backdrop-filter:blur(6px);overflow:hidden;cursor:pointer;
+  border:2px solid rgba(255,255,255,.35)}
+.hero-icon img{width:100%;height:100%;object-fit:cover;display:block}
+.hero-icon-edit{position:absolute;bottom:-2px;right:-2px;width:26px;height:26px;border-radius:50%;
+  background:var(--coral);display:flex;align-items:center;justify-content:center;font-size:13px;
+  border:2px solid #2A2D5C;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.3)}
 .hero-text{flex:1;min-width:220px}
-.hero h1{margin:0 0 4px;font-size:26px;font-weight:700;letter-spacing:.2px}
+.hero h1{margin:0 0 4px;font-size:19px;font-weight:700;letter-spacing:.2px}
 .hero .sub{color:rgba(255,255,255,.75);font-size:14px;font-family:'IBM Plex Sans Thai',sans-serif}
 .hero-badge{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:16px;
   padding:10px 20px;text-align:center;backdrop-filter:blur(6px);min-width:130px}
@@ -130,7 +136,12 @@ table button{padding:6px 10px;font-size:13px}
 
 @media(max-width:700px){.grid{grid-template-columns:1fr 1fr}.chartbox{height:290px}}
 @media(max-width:430px){.grid{grid-template-columns:1fr}.container{padding:14px 12px 50px}
-  .card{padding:16px}details.card{padding:16px}.hero{padding:22px 18px}}
+  .card{padding:16px}details.card{padding:16px}.hero{padding:22px 18px}
+  .hero-icon{width:72px;height:72px;font-size:32px}
+  .hero h1{font-size:17px}
+  .hero-badge{width:100%;margin-top:14px;padding:18px 20px}
+  .hero-badge-value{font-size:34px}
+  .hero-age{font-size:13px;margin-top:4px}}
 
 @media print{
   @page{size:A4 portrait;margin:12mm 10mm}
@@ -139,6 +150,7 @@ table button{padding:6px 10px;font-size:13px}
   .container{max-width:100%;padding:0;margin:0}
   .hero{background:#fff;color:#000;border:1px solid #ddd;box-shadow:none;padding:14px 16px;border-radius:10px}
   .hero-blob{display:none}
+  .hero-icon{border-color:#ddd}
   .hero-badge{background:#f7f7f7;border-color:#ddd;color:#000}
   .hero-chip{background:#f7f7f7;border-color:#ddd;color:#000}
   .hero-chip span{color:#555}
@@ -152,7 +164,8 @@ table button{padding:6px 10px;font-size:13px}
   .stat b{font-size:15px}
   .stat span{font-size:10.5px}
   .card h2{font-size:14px;margin-bottom:10px}
-  .chartbox{height:200px}
+  .chartbox{height:200px;overflow:hidden}
+  #historyCard{margin-top:56px}
   .tablewrap{overflow:visible}
   table{min-width:0 !important;width:100%;font-size:10.5px}
   th,td{padding:5px 6px}
@@ -168,7 +181,11 @@ table button{padding:6px 10px;font-size:13px}
   <div class="hero-blob b1"></div>
   <div class="hero-blob b2"></div>
   <div class="hero-content">
-    <div class="hero-icon">👶</div>
+    <div class="hero-icon-wrap">
+      <div class="hero-icon" id="heroIcon" title="แตะเพื่อใส่รูปลูก" onclick="document.getElementById('childPhotoInput').click()">👶</div>
+      <div class="hero-icon-edit no-print" title="แตะเพื่อใส่รูปลูก" onclick="document.getElementById('childPhotoInput').click()">📷</div>
+      <input id="childPhotoInput" type="file" accept="image/*" style="display:none" onchange="handlePhotoSelect(event)">
+    </div>
     <div class="hero-text">
       <h1>Baby Weight Tracker</h1>
       <div class="sub">บันทึกและติดตามน้ำหนักของ <span id="childLabel">ลูก</span></div>
@@ -242,7 +259,7 @@ table button{padding:6px 10px;font-size:13px}
 <div id="periodInfo" class="small" style="margin-top:10px"></div>
 </div>
 
-<div class="card">
+<div class="card" id="historyCard">
 <h2>📋 ประวัติการชั่ง <button class="ghost no-print" style="margin-left:auto" onclick="window.print()">🖨️ พิมพ์รายงาน</button></h2>
 <div class="small" style="margin-bottom:10px">กด ✏️ เพื่อแก้ไขวันนั้น หรือ 🗑️ เพื่อลบเฉพาะวันนั้น</div>
 <div class="tablewrap">
@@ -366,6 +383,45 @@ function renderHeroMeta(){
     chips+=`<div class="hero-chip"><span>เวลาเกิด</span><b>${c.birthTime} น.</b></div>`;
   }
   box.innerHTML=chips;
+}
+
+function renderHeroIcon(){
+  const el=document.getElementById("heroIcon");
+  const c=appData.child;
+  el.innerHTML=(c&&c.photo)?`<img src="${c.photo}" alt="รูปลูก">`:"👶";
+}
+function readAndCompressImage(file,maxSize=320,quality=.82){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=()=>{
+      const img=new Image();
+      img.onload=()=>{
+        let w=img.width,h=img.height;
+        if(w>h){if(w>maxSize){h=Math.round(h*maxSize/w);w=maxSize}}
+        else{if(h>maxSize){w=Math.round(w*maxSize/h);h=maxSize}}
+        const canvas=document.createElement("canvas");
+        canvas.width=w;canvas.height=h;
+        canvas.getContext("2d").drawImage(img,0,0,w,h);
+        resolve(canvas.toDataURL("image/jpeg",quality));
+      };
+      img.onerror=()=>reject(new Error("โหลดรูปภาพไม่สำเร็จ"));
+      img.src=reader.result;
+    };
+    reader.onerror=()=>reject(new Error("อ่านไฟล์ไม่สำเร็จ"));
+    reader.readAsDataURL(file);
+  });
+}
+async function handlePhotoSelect(ev){
+  const file=ev.target.files[0];if(!file)return;
+  try{
+    const dataUrl=await readAndCompressImage(file);
+    appData.child.photo=dataUrl;
+    saveApp();
+    renderHeroIcon();
+  }catch(e){
+    alert("ไม่สามารถใส่รูปนี้ได้ ลองเลือกรูปอื่น");
+  }
+  ev.target.value="";
 }
 
 /* ---------- Helpers ---------- */
@@ -505,6 +561,7 @@ function render(){
   }
   renderWhoBox();
   renderHeroMeta();
+  renderHeroIcon();
   drawChart();
 }
 function renderWhoBox(){

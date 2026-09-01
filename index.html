@@ -61,6 +61,16 @@ h1,h2,.stat b,.hero-badge-value,button,summary{font-family:'Kanit',system-ui,san
   padding:8px 14px;backdrop-filter:blur(6px);font-family:'IBM Plex Sans Thai',sans-serif}
 .hero-chip span{display:block;font-size:11px;color:rgba(255,255,255,.65)}
 .hero-chip b{display:block;font-size:14px;font-weight:600;color:#fff;font-family:'Kanit',sans-serif;margin-top:2px}
+.hero-links{position:relative;display:flex;gap:14px;flex-wrap:wrap;margin-top:18px}
+.hero-link{display:flex;align-items:center;gap:10px;text-decoration:none;background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.25);border-radius:40px;padding:6px 16px 6px 6px;backdrop-filter:blur(6px);
+  transition:.15s}
+.hero-link:hover{background:rgba(255,255,255,.2);transform:translateY(-1px)}
+.hero-link-icon{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.9);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:18px}
+.hero-link-text{display:flex;flex-direction:column;line-height:1.25}
+.hero-link-text b{font-size:13px;font-weight:600;color:#fff;font-family:'Kanit',sans-serif}
+.hero-link-text span{font-size:11px;color:rgba(255,255,255,.7);font-family:'IBM Plex Sans Thai',sans-serif}
 .card{background:var(--surface);border-radius:20px;padding:20px;margin-bottom:16px;box-shadow:var(--shadow);border:1px solid var(--line)}
 .card h2{font-size:17px;margin:0 0 16px;font-weight:600;display:flex;align-items:center;gap:8px}
 details.card{padding:20px}
@@ -136,6 +146,8 @@ table button{padding:6px 10px;font-size:13px}
   .hero-badge{width:100%;margin-top:14px;padding:18px 20px}
   .hero-badge-value{font-size:34px}
   .hero-age{font-size:13px;margin-top:4px}
+  .hero-link{padding:5px 14px 5px 5px}
+  .hero-link-icon{width:34px;height:34px;font-size:16px}
   #vaxScheduleCard table,#vaxHistoryCard table{min-width:0}
   #vaxScheduleCard th,#vaxScheduleCard td,#vaxHistoryCard th,#vaxHistoryCard td{font-size:12px;padding:8px 5px}
   #vaxScheduleCard .vpill,#vaxHistoryCard .vpill{white-space:normal;font-size:11px;padding:3px 7px;line-height:1.35}
@@ -193,6 +205,20 @@ table button{padding:6px 10px;font-size:13px}
     </div>
   </div>
   <div class="hero-meta" id="heroMeta"></div>
+  <div class="hero-links">
+    <a class="hero-link" href="https://drive.google.com/drive/folders/1ha5J9cNujNeXtxVkoQvXnEmKs3zXlF7k?usp=drive_link" target="_blank" rel="noopener">
+      <span class="hero-link-icon">📷</span>
+      <span class="hero-link-text"><b>รูปน้อง LIN</b><span>เปิดใน Google Drive</span></span>
+    </a>
+    <a class="hero-link" href="https://drive.google.com/drive/folders/1MlfNW5kEyy9lDI7tCpTeBuJqWBuNrmYr?usp=drive_link" target="_blank" rel="noopener">
+      <span class="hero-link-icon">📄</span>
+      <span class="hero-link-text"><b>เอกสารน้อง LIN</b><span>เปิดใน Google Drive</span></span>
+    </a>
+    <a class="hero-link" href="https://golf021.github.io/Baby-log/" target="_blank" rel="noopener">
+      <span class="hero-link-icon">🛌</span>
+      <span class="hero-link-text"><b>สถิติ นอน อึ ฉี่</b><span>เปิด Baby Log</span></span>
+    </a>
+  </div>
 </header>
 <details class="card no-print" id="profileDetails">
 <summary>👤 ข้อมูลลูกและการตั้งค่า</summary>

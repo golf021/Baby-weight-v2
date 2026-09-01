@@ -218,6 +218,10 @@ table button{padding:6px 10px;font-size:13px}
       <span class="hero-link-icon">🛌</span>
       <span class="hero-link-text"><b>สถิติ นอน อึ ฉี่</b><span>เปิด Baby Log</span></span>
     </a>
+    <a class="hero-link" href="https://golf021.github.io/dspm-checklist/" target="_blank" rel="noopener">
+      <span class="hero-link-icon">🧩</span>
+      <span class="hero-link-text"><b>แบบสังเกตพัฒนาการเด็ก (DSPM)</b><span>เปิดแบบประเมิน</span></span>
+    </a>
   </div>
 </header>
 <details class="card no-print" id="profileDetails">
@@ -235,6 +239,13 @@ table button{padding:6px 10px;font-size:13px}
 </div>
 </div>
 <div><label for="childBirthWeight">น้ําหนักแรกเกิด (กก.)</label><input id="childBirthWeight" type="number" step="0.01" min="0" placeholder="00.00"></div>
+<div><label for="childBloodType">กรุ๊ปเลือด</label><select id="childBloodType">
+<option value="">ไม่ระบุ</option>
+<option value="A">A</option>
+<option value="B">B</option>
+<option value="AB">AB</option>
+<option value="O">O</option>
+</select></div>
 </div>
 <div class="actions">
 <button class="primary" onclick="saveChildProfile()">บันทึกข้อมูลลูก</button>
@@ -438,6 +449,7 @@ function loadChildProfileForm(){
   document.getElementById("childHour").value=h||"";
   document.getElementById("childMinute").value=m||"";
   document.getElementById("childBirthWeight").value=(c.birthWeight!=null&&c.birthWeight!=="")?c.birthWeight:"";
+  document.getElementById("childBloodType").value=c.bloodType||"";
   document.getElementById("childLabel").textContent=c.name||"ลูก";
 }
 function saveChildProfile(){
@@ -448,6 +460,7 @@ function saveChildProfile(){
   appData.child.birthTime=(h&&m)?`${h}:${m}`:"";
   const bw=parseFloat(document.getElementById("childBirthWeight").value);
   appData.child.birthWeight=isFinite(bw)?bw:"";
+  appData.child.bloodType=document.getElementById("childBloodType").value;
   saveApp();loadChildProfileForm();render();
   alert("บันทึกข้อมูลลูกแล้ว");
 }
@@ -463,7 +476,7 @@ function formatDateWithDay(dateStr){
 function renderHeroMeta(){
   const c=appData.child;
   const box=document.getElementById("heroMeta");
-  if(!c||(!c.dob&&!c.birthTime&&!c.birthWeight)){box.innerHTML="";return}
+  if(!c||(!c.dob&&!c.birthTime&&!c.birthWeight&&!c.bloodType)){box.innerHTML="";return}
   let chips="";
   if(c.dob){
     chips+=`<div class="hero-chip"><span>วันเกิด</span><b>${formatDateWithDay(c.dob)}</b></div>`;
@@ -475,6 +488,9 @@ function renderHeroMeta(){
   }
   if(c.birthWeight!=null&&c.birthWeight!==""){
     chips+=`<div class="hero-chip"><span>น้ําหนักแรกเกิด</span><b>${fmtWeight(+c.birthWeight)}</b></div>`;
+  }
+  if(c.bloodType){
+    chips+=`<div class="hero-chip"><span>กรุ๊ปเลือด</span><b>${esc(c.bloodType)}</b></div>`;
   }
   box.innerHTML=chips;
 }
